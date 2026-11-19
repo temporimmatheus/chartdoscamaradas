@@ -85,12 +85,10 @@
     try {
       ctx.scale(scale, scale);
       ctx.fillStyle = '#fbf2f6'; ctx.fillRect(0, 0, logicalWidth, logicalHeight);
-      ctx.fillStyle = '#422c3b'; ctx.font = '32px Georgia, serif';
-      ctx.fillText(fitText(ctx, 'amigos do mati', logicalWidth - margin * 2), margin, margin + 28);
-      ctx.font = '600 18px system-ui, sans-serif'; ctx.fillStyle = '#a63e66';
-      ctx.fillText(fitText(ctx, `@${snapshot.username}`, logicalWidth - margin * 2), margin, margin + 56);
+      ctx.fillStyle = '#422c3b'; ctx.font = '600 32px system-ui, sans-serif';
+      ctx.fillText(fitText(ctx, `@${snapshot.username}`, logicalWidth - margin * 2), margin, margin + 32);
       ctx.font = '15px system-ui, sans-serif'; ctx.fillStyle = '#79616e';
-      ctx.fillText(fitText(ctx, Core.PERIODS[snapshot.period], logicalWidth - margin * 2), margin, margin + 80);
+      ctx.fillText(fitText(ctx, Core.PERIODS[snapshot.period], logicalWidth - margin * 2), margin, margin + 62);
       const albums = snapshot.albums.slice(0, snapshot.cols * snapshot.rows);
       const position = index => ({ x: margin + (index % snapshot.cols) * (cell + gap),
         y: margin + header + Math.floor(index / snapshot.cols) * (cell + text + gap) });

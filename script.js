@@ -3,7 +3,7 @@
   const Core = ChartCore;
   const client = LastfmClient.createClient({ apiKey: '8b2854f4f61653b88a4161656c020b46' });
   const $ = id => document.getElementById(id);
-  const ui = Object.fromEntries(['chart-form','settings-fields','username','period','cols','rows','fetch-btn','export-btn','status','error','retry-btn','chart-grid','chart-container','chart-summary','chart-user','chart-meta','empty-state','empty-title','empty-description','view-fit','view-detail','loading-indicator','export-info','cancel-export','download-link','share-btn','album-dialog','close-dialog','album-cover','album-rank','album-title','album-artist','album-plays','album-link'].map(id => [id, $(id)]));
+  const ui = Object.fromEntries(['chart-form','settings-fields','username','period','cols','rows','fetch-btn','export-btn','status','error','retry-btn','chart-grid','chart-container','chart-summary','chart-user','chart-meta','empty-state','empty-title','empty-description','view-fit','view-detail','loading-indicator','export-info','cancel-export','share-btn','album-dialog','close-dialog','album-cover','album-rank','album-title','album-artist','album-plays','album-link'].map(id => [id, $(id)]));
   const gate = Core.createRequestGate();
   const state = { snapshot: null, loading: false, exporting: false, exportController: null,
     view: 'fit', cards: new Map(), download: null };
@@ -21,14 +21,13 @@
   function clearDownload() {
     if (state.download) URL.revokeObjectURL(state.download.url);
     state.download = null;
-    ui['download-link'].hidden = true;
-    ui['download-link'].removeAttribute('href');
-    ui['share-btn'].hidden = true;
+    ui['share-btn'].disabled = true;
   }
   function controls() {
     ui['fetch-btn'].disabled = state.loading || state.exporting;
     ui['settings-fields'].disabled = state.exporting;
     ui['export-btn'].disabled = state.exporting || state.loading || !state.snapshot?.albums.length || !selectionMatches();
+    ui['share-btn'].disabled = state.exporting || state.loading || !state.download;
     ui['cancel-export'].hidden = !state.exporting;
     ui['loading-indicator'].hidden = !state.loading;
     ui['chart-container'].setAttribute('aria-busy', String(state.loading));
@@ -196,11 +195,9 @@
       if (controller.signal.aborted) throw new DOMException('Exportação cancelada.', 'AbortError');
       const filename = Core.filename(snapshot), url = URL.createObjectURL(blob);
       state.download = { blob, url, filename };
-      const link = ui['download-link']; link.href = url; link.download = filename; link.hidden = false; link.click();
-      if (navigator.canShare && typeof File !== 'undefined') {
-        try { ui['share-btn'].hidden = !navigator.canShare({ files: [new File([blob], filename, { type: 'image/png' })] }); } catch { ui['share-btn'].hidden = true; }
-      }
-      message(rendered.missing ? `PNG pronto. ${rendered.missing} capas indisponíveis foram substituídas por um disco ilustrado.` : 'PNG pronto. Se o download não iniciar, toque em Salvar PNG pronto.');
+      const link = document.createElement('a'); link.href = url; link.download = filename; link.click();
+      ui['share-btn'].disabled = false;
+      message(rendered.missing ? `PNG pronto. ${rendered.missing} capas indisponíveis foram substituídas por um disco ilustrado.` : 'PNG pronto.');
     } catch (error) {
       if (error.name === 'AbortError' || controller.signal.aborted) message('Exportação cancelada.');
       else { showError(error.message || 'Não foi possível exportar. Tente a qualidade padrão.'); message('O chart continua disponível para uma nova tentativa.'); }
@@ -240,8 +237,14 @@
   ui['share-btn'].addEventListener('click', async () => {
     if (!state.download) return;
     const { blob, filename } = state.download;
-    try { await navigator.share({ files: [new File([blob], filename, { type: 'image/png' })] }); }
-    catch (error) { if (error.name !== 'AbortError') showError('Não foi possível compartilhar. Use Salvar PNG pronto.'); }
+    if (!navigator.share) { showError('Compartilhamento de imagens não disponível neste navegador. Use Baixar PNG.'); return; }
+    try {
+      const file = new File([blob], filename, { type: 'image/png' });
+      const data = navigator.canShare?.({ files: [file] }) === false
+        ? { title: 'chart generator', text: 'Meu chart do Last.fm.' }
+        : { files: [file] };
+      await navigator.share(data);
+    } catch (error) { if (error.name !== 'AbortError') showError('Não foi possível compartilhar. Use Baixar PNG.'); }
   });
   let saved;
   try { saved = Core.readPreferences(localStorage); } catch { saved = Core.readPreferences({ getItem: () => null }); }

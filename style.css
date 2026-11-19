@@ -94,7 +94,6 @@ input[aria-invalid="true"] { border-color:#b82e50; background:#fff3f5; }
 .download-copy strong { display:block; font-size:.85rem; font-weight:600; }
 .download-copy span { display:block; font-size:.73rem; line-height:1.5; color:var(--muted); margin-top:4px; }
 .download-actions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
-.save-link { padding:10px 8px; font-size:.8rem; }
 .site-footer { display:flex; justify-content:space-between; gap:20px; padding:12px 0 32px; color:var(--muted); font-size:.72rem; }
 .site-footer > span:first-child { font-weight:600; }
 .site-footer > span:first-child span { margin-left:8px; color:var(--rose); }
@@ -137,7 +136,6 @@ input[aria-invalid="true"] { border-color:#b82e50; background:#fff3f5; }
   .download-copy span { margin:0; font-size:.7rem; }
   .download-actions { display:flex; }
   .download-actions .button { padding-inline:9px; }
-  .save-link { text-align:center; }
   .site-footer { padding-bottom:24px; font-size:.68rem; }
 }
 @media (max-width:360px) { .app { padding-inline:10px; } .settings,.preview { padding:16px; } .brand { font-size:1rem; } .brand-caption { font-size:.65rem; } }

@@ -18,7 +18,7 @@ O PNG é desenhado diretamente no canvas, sem carregar bibliotecas externas. Usa
 
 A exportação sempre usa a qualidade padrão: até dois milhões de pixels e 2400 pixels por lado. As dimensões exatas dependem do formato; a largura e a altura são exibidas antes do download.
 
-O link de salvar permanece disponível caso o navegador não inicie o download automaticamente. Compartilhamento nativo aparece apenas quando o navegador suporta compartilhar arquivos PNG.
+O botão de compartilhar permanece disponível na barra de exportação e fica ativo depois que o PNG é gerado. Navegadores sem compartilhamento de arquivos PNG mostram uma orientação para usar o download.
 
 ## Estrutura
 
