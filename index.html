@@ -93,13 +93,18 @@
       <section class="download-bar" aria-label="salvar chart">
         <div class="download-copy"><strong>exportar png</strong><span id="export-info"></span></div>
         <div class="download-actions">
-          <button id="export-btn" type="button" class="button primary" disabled><span aria-hidden="true">↓</span> baixar png</button>
+          <button id="export-btn" type="button" class="button export-action" disabled><span aria-hidden="true">↓</span> baixar png</button>
           <button id="cancel-export" type="button" class="button secondary" hidden>cancelar</button>
-          <button id="share-btn" type="button" class="button secondary" disabled>compartilhar</button>
+          <button id="share-btn" type="button" class="button export-action" disabled>compartilhar</button>
         </div>
       </section>
     </main>
-    <footer class="site-footer"><span>amigos do mati</span><span>dados e capas do <a href="https://www.last.fm" target="_blank" rel="noopener noreferrer">last.fm</a>.</span></footer>
+    <footer class="site-footer">
+      <span>amigos do mati</span>
+      <span class="footer-details">dados e capas do <a href="https://www.last.fm" target="_blank" rel="noopener noreferrer">last.fm</a>.
+        <button id="site-share-btn" type="button" class="site-share-button" aria-label="compartilhar o chart generator" title="compartilhar o chart generator"><span aria-hidden="true">↗</span> compartilhar site</button>
+      </span>
+    </footer>
   </div>
   <dialog id="album-dialog" class="album-dialog" aria-labelledby="album-title" aria-describedby="album-artist">
     <button id="close-dialog" class="dialog-close" type="button" aria-label="fechar detalhes">×</button>

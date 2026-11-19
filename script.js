@@ -3,7 +3,7 @@
   const Core = ChartCore;
   const client = LastfmClient.createClient({ apiKey: '8b2854f4f61653b88a4161656c020b46' });
   const $ = id => document.getElementById(id);
-  const ui = Object.fromEntries(['chart-form','settings-fields','username','period','cols','rows','fetch-btn','export-btn','status','error','retry-btn','chart-grid','chart-container','chart-summary','chart-user','chart-meta','empty-state','empty-title','empty-description','view-fit','view-detail','loading-indicator','export-info','cancel-export','share-btn','album-dialog','close-dialog','album-cover','album-rank','album-title','album-artist','album-plays','album-link'].map(id => [id, $(id)]));
+  const ui = Object.fromEntries(['chart-form','settings-fields','username','period','cols','rows','fetch-btn','export-btn','status','error','retry-btn','chart-grid','chart-container','chart-summary','chart-user','chart-meta','empty-state','empty-title','empty-description','view-fit','view-detail','loading-indicator','export-info','cancel-export','share-btn','site-share-btn','album-dialog','close-dialog','album-cover','album-rank','album-title','album-artist','album-plays','album-link'].map(id => [id, $(id)]));
   const gate = Core.createRequestGate();
   const state = { snapshot: null, loading: false, exporting: false, exportController: null,
     view: 'fit', cards: new Map(), download: null };
@@ -245,6 +245,19 @@
   ui['share-btn'].addEventListener('click', async () => {
     await exportChart('share');
   });
+  async function shareSite() {
+    const data = { title: 'chart generator', text: 'Crie seu chart com seus discos mais ouvidos no Last.fm.', url: window.location.href };
+    if (navigator.share) {
+      try { await navigator.share(data); return; }
+      catch (error) { if (error.name === 'AbortError') return; }
+    }
+    if (navigator.clipboard?.writeText) {
+      try { await navigator.clipboard.writeText(window.location.href); clearError(); message('Link copiado.'); return; }
+      catch { /* Fall through to the address bar. */ }
+    }
+    showError('Não foi possível compartilhar o link.');
+  }
+  ui['site-share-btn'].addEventListener('click', shareSite);
   let saved;
   try { saved = Core.readPreferences(localStorage); } catch { saved = Core.readPreferences({ getItem: () => null }); }
   ui.username.value = saved.username; ui.period.value = saved.period; ui.cols.value = saved.cols; ui.rows.value = saved.rows;

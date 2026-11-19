@@ -94,9 +94,16 @@ input[aria-invalid="true"] { border-color:#b82e50; background:#fff3f5; }
 .download-copy strong { display:block; font-size:.85rem; font-weight:600; }
 .download-copy span { display:block; font-size:.73rem; line-height:1.5; color:var(--muted); margin-top:4px; }
 .download-actions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.export-action { min-height:40px; padding:8px 12px; background:transparent; border-color:transparent; color:var(--rose); font-size:.78rem; }
+.export-action:hover:not(:disabled) { background:#f7edf2; border-color:var(--line); }
+.export-action:disabled { background:transparent; opacity:.42; }
 .site-footer { display:flex; justify-content:space-between; gap:20px; padding:12px 0 32px; color:var(--muted); font-size:.72rem; }
 .site-footer > span:first-child { font-weight:600; }
 .site-footer > span:first-child span { margin-left:8px; color:var(--rose); }
+.footer-details { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:10px; }
+.site-share-button { min-height:36px; padding:6px 9px; border:1px solid transparent; border-radius:9px; background:transparent; color:var(--muted); font-size:.72rem; }
+.site-share-button:hover { border-color:var(--line); background:#fff; color:var(--rose); }
+.site-share-button span { margin-right:4px; }
 .album-dialog { width:min(400px,calc(100% - 32px)); border:1px solid var(--line); border-radius:22px; padding:26px; background:var(--paper); color:var(--ink); max-height:calc(100svh - 40px); overflow:auto; }
 .album-dialog::backdrop { background:#34243088; backdrop-filter:blur(4px); }
 .dialog-close { position:absolute; top:12px; right:12px; z-index:3; border:1px solid var(--line); background:white; width:44px; height:44px; border-radius:50%; font-size:1.5rem; }

@@ -13,16 +13,17 @@ class Element {
 }
 const tick=()=>new Promise(setImmediate);
 const albums=count=>Array.from({length:count},(_,i)=>({rank:i+1,name:`Album ${i}`,artist:'Artist',image:'',url:'',playcount:4}));
-function app(exporter){
+function app(exporter,navigatorOptions={}){
   const html=fs.readFileSync(require.resolve('../index.html'),'utf8'),els={};
   for(const match of html.matchAll(/<([a-z][a-z0-9]*)\b([^>]*\bid="([^"]+)"[^>]*)>/g)){
     const element=new Element(match[1]);element.hidden=/\bhidden\b/.test(match[2]);els[match[3]]=element;
   }
   const presets=[3,5,10].map(n=>{const b=new Element('button');b.dataset.size=String(n);return b});
   const pending=[],window=new Element('window');
+  window.location={href:'https://example.com/chart'};
   const context={ChartCore:Core,LastfmClient:{createClient:()=>({getAlbums:config=>new Promise((resolve,reject)=>pending.push({config,resolve,reject}))})},
     ChartExporter:exporter||{},document:{getElementById:id=>els[id],querySelectorAll:()=>presets,createElement:tag=>new Element(tag),createDocumentFragment:()=>new Element('#fragment')},
-    localStorage:{getItem:()=>null,setItem(){}},window,navigator:{},URL,AbortController,DOMException,Intl,console,File,Blob};
+    localStorage:{getItem:()=>null,setItem(){}},window,navigator:navigatorOptions,URL,AbortController,DOMException,Intl,console,File,Blob};
   vm.createContext(context);vm.runInContext(fs.readFileSync(require.resolve('../script.js'),'utf8'),context);
   els.username.value='user';return {els,pending,presets,window,context};
 }
@@ -62,6 +63,19 @@ test('growing the grid requests the required number of albums',async()=>{
 });
 test('invalid dimension changes cannot bypass the limit or enable export',async()=>{
   const a=app();await generate(a);a.els.cols.value='21';a.els.cols.emit('change');assert.equal(a.pending.length,1);assert.equal(a.els['export-btn'].disabled,true);assert.equal(a.els.error.hidden,false);
+});
+test('site sharing uses native share and clipboard fallback',async()=>{
+  let shared, copied;
+  const a=app(undefined,{share:async data=>{shared=data},clipboard:{writeText:async value=>{copied=value}}});
+  a.els['site-share-btn'].emit('click');await tick();
+  assert.equal(shared.title,'chart generator');
+  assert.equal(shared.text,'Crie seu chart com seus discos mais ouvidos no Last.fm.');
+  assert.equal(shared.url,'https://example.com/chart');
+  assert.equal(copied,undefined);
+  const fallback=app(undefined,{clipboard:{writeText:async value=>{copied=value}}});
+  fallback.els['site-share-btn'].emit('click');await tick();
+  assert.equal(copied,'https://example.com/chart');
+  assert.equal(fallback.els.status.textContent,'Link copiado.');
 });
 test('sharing starts a new export without downloading first',async()=>{
   let resolve,renders=0;const a=app({render:()=>{renders++;return new Promise(r=>{resolve=r})},toBlob:async()=>new Blob(['PNG'],{type:'image/png'})});
