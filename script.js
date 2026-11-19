@@ -3,7 +3,7 @@
   const Core = ChartCore;
   const client = LastfmClient.createClient({ apiKey: '8b2854f4f61653b88a4161656c020b46' });
   const $ = id => document.getElementById(id);
-  const ui = Object.fromEntries(['chart-form','settings-fields','username','period','cols','rows','fetch-btn','export-btn','status','error','retry-btn','chart-grid','chart-container','chart-summary','chart-user','chart-meta','empty-state','empty-title','empty-description','view-fit','view-detail','loading-indicator','quality','export-info','cancel-export','download-link','share-btn','album-dialog','close-dialog','album-cover','album-rank','album-title','album-artist','album-plays','album-link'].map(id => [id, $(id)]));
+  const ui = Object.fromEntries(['chart-form','settings-fields','username','period','cols','rows','fetch-btn','export-btn','status','error','retry-btn','chart-grid','chart-container','chart-summary','chart-user','chart-meta','empty-state','empty-title','empty-description','view-fit','view-detail','loading-indicator','export-info','cancel-export','download-link','share-btn','album-dialog','close-dialog','album-cover','album-rank','album-title','album-artist','album-plays','album-link'].map(id => [id, $(id)]));
   const gate = Core.createRequestGate();
   const state = { snapshot: null, loading: false, exporting: false, exportController: null,
     view: 'fit', cards: new Map(), download: null };
@@ -12,7 +12,7 @@
   const getConfig = () => Core.config(rawConfig());
 
   function preferences() {
-    try { localStorage.setItem('chartgen.preferences.v2', JSON.stringify({ ...rawConfig(), view: state.view, quality: 'standard' })); } catch { /* Storage may be unavailable in private mode. */ }
+    try { localStorage.setItem('chartgen.preferences.v2', JSON.stringify({ ...rawConfig(), view: state.view })); } catch { /* Storage may be unavailable in private mode. */ }
   }
   function message(text) { ui.status.textContent = text; }
   function clearError() { ui.error.hidden = true; ui.error.textContent = ''; ui['retry-btn'].hidden = true; }
@@ -28,8 +28,6 @@
   function controls() {
     ui['fetch-btn'].disabled = state.loading || state.exporting;
     ui['settings-fields'].disabled = state.exporting;
-    ui.quality.value = 'standard';
-    ui.quality.disabled = true;
     ui['export-btn'].disabled = state.exporting || state.loading || !state.snapshot?.albums.length || !selectionMatches();
     ui['cancel-export'].hidden = !state.exporting;
     ui['loading-indicator'].hidden = !state.loading;
@@ -40,7 +38,7 @@
     });
     if (!state.exporting) {
       if (state.snapshot?.albums.length) {
-        const layout = Core.exportLayout(state.snapshot.cols, state.snapshot.rows, ui.quality.value);
+        const layout = Core.exportLayout(state.snapshot.cols, state.snapshot.rows, 'standard');
         ui['export-info'].textContent = `${layout.width} × ${layout.height} px`;
       } else ui['export-info'].textContent = '';
     }
@@ -190,7 +188,7 @@
     let canvas;
     try {
       message('Preparando PNG…');
-      const rendered = await ChartExporter.render(snapshot, { quality: ui.quality.value, signal: controller.signal,
+      const rendered = await ChartExporter.render(snapshot, { quality: 'standard', signal: controller.signal,
         onProgress: (done, total) => { ui['export-info'].textContent = `Preparando capas: ${done} de ${total}`; } });
       canvas = rendered.canvas;
       ui['export-info'].textContent = 'Finalizando PNG…';
@@ -232,8 +230,6 @@
   }));
   ui['view-fit'].addEventListener('click', () => setView('fit'));
   ui['view-detail'].addEventListener('click', () => setView('detail'));
-  ui.quality.value = 'standard';
-  ui.quality.disabled = true;
   ui['export-btn'].addEventListener('click', exportChart);
   ui['cancel-export'].addEventListener('click', () => state.exportController?.abort());
   ui['close-dialog'].addEventListener('click', () => ui['album-dialog'].close());
@@ -250,7 +246,7 @@
   let saved;
   try { saved = Core.readPreferences(localStorage); } catch { saved = Core.readPreferences({ getItem: () => null }); }
   ui.username.value = saved.username; ui.period.value = saved.period; ui.cols.value = saved.cols; ui.rows.value = saved.rows;
-  ui.quality.value = 'standard'; ui.quality.disabled = true; setView(saved.view); controls();
+  setView(saved.view); controls();
   window.addEventListener('pagehide', () => { gate.cancel(); state.exportController?.abort(); clearDownload(); });
   // Restore interactive controls when a browser resumes this page from its back/forward cache.
   window.addEventListener('pageshow', event => { if (event.persisted) { state.loading = false; controls(); } });
