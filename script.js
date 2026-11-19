@@ -170,7 +170,7 @@
   function details(album) {
     ui['album-rank'].textContent = `ÁLBUM #${album.rank}`;
     ui['album-title'].textContent = album.name; ui['album-artist'].textContent = album.artist;
-    ui['album-plays'].textContent = `${integerFormat.format(album.playcount)} ${album.playcount === 1 ? 'reprodução' : 'reproduções'} neste período`;
+    ui['album-plays'].textContent = `${integerFormat.format(album.playcount)} scrobbles neste período`;
     ui['album-link'].hidden = !album.url;
     if (album.url) ui['album-link'].href = album.url; else ui['album-link'].removeAttribute('href');
     const image = ui['album-cover']; image.hidden = true; image.removeAttribute('src');
