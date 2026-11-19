@@ -22,7 +22,7 @@ a { color:var(--rose); text-underline-offset:4px; }
 .header-note span { margin-left:10px; color:var(--rose); }
 .intro { padding:52px 0 38px; }
 .eyebrow { font-size:.68rem; letter-spacing:.16em; font-weight:700; color:var(--rose); margin:0 0 16px; }
-h1 { font-family:Georgia,"Times New Roman",serif; font-size:clamp(2.6rem,5vw,4.4rem); letter-spacing:-.055em; font-weight:400; line-height:1.02; margin:0 0 20px; }
+h1 { font-family:"Cascadia Code",Consolas,ui-monospace,monospace; font-size:clamp(2.2rem,4.5vw,3.6rem); letter-spacing:-.055em; font-weight:400; line-height:1.02; margin:0 0 20px; }
 h1 span { color:var(--rose); font-style:italic; }
 .intro > p:last-child { color:var(--muted); font-size:.94rem; line-height:1.7; margin:0; }
 .workspace { display:grid; grid-template-columns:300px minmax(0,1fr); gap:24px; align-items:start; }
@@ -113,7 +113,7 @@ input[aria-invalid="true"] { border-color:#b82e50; background:#fff3f5; }
   .site-header { min-height:88px; }
   .header-note { display:none; }
   .intro { padding:36px 0 28px; }
-  h1 { font-size:clamp(2.7rem,9vw,4rem); }
+  h1 { font-size:clamp(2rem,8vw,3.2rem); }
   .intro > p:last-child { font-size:.87rem; }
   .workspace { grid-template-columns:minmax(0,1fr); }
   .settings,.preview { border-radius:18px; padding:20px; }
@@ -144,3 +144,23 @@ input[aria-invalid="true"] { border-color:#b82e50; background:#fff3f5; }
 }
 @media (max-width:360px) { .app { padding-inline:10px; } .settings,.preview { padding:16px; } .brand { font-size:1rem; } .brand-caption { font-size:.65rem; } }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }
+
+/* Pastel vaporwave palette; album metadata keeps its original spelling. */
+body { text-transform:lowercase; background:radial-gradient(ellipse at 5% 0%,#f6d9ed 0,transparent 52%),radial-gradient(ellipse at 100% 12%,#e5dafa 0,transparent 48%),#fbf3fa; }
+body::before { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; background-image:linear-gradient(#a68bc91a 1px,transparent 1px),linear-gradient(90deg,#a68bc91a 1px,transparent 1px); background-size:48px 48px; mask-image:linear-gradient(#0008,transparent 85%); }
+.brand-icon { width:44px; height:44px; border-radius:12px; flex-shrink:0; }
+h1 { text-shadow:2px 2px 0 #9cdce94d; letter-spacing:-.07em; font-weight:500; }
+h2,.eyebrow,.brand,.header-note,.step,.view-switch,.presets { font-family:"Cascadia Code",Consolas,ui-monospace,monospace; }
+.panel { border-color:#e2d2e9; background:#fffbfdf5; }
+.step { background:#eee2f4; color:#805b96; }
+.presets button[aria-pressed="true"],.view-switch button[aria-pressed="true"] { box-shadow:inset 0 -2px 0 #89cfdb,0 2px 8px #a476b510; color:#79528f; }
+.primary { background:linear-gradient(110deg,#a74779,#9161a3); }
+.primary:hover:not(:disabled) { background:linear-gradient(110deg,#903a67,#7f4f92); }
+input,.album-name,.artist-name,.chart-summary h3,#album-title,#album-artist { text-transform:none; }
+.empty-state h3,.album-dialog h2 { font-family:"Cascadia Code",Consolas,ui-monospace,monospace; font-size:1.15rem; }
+.intro { padding-top:40px; }
+@media (max-width:760px) {
+  body { padding-bottom:calc(172px + env(safe-area-inset-bottom)); }
+  .download-bar { position:fixed; left:12px; right:12px; bottom:8px; margin:0; }
+  #preview { scroll-margin-top:16px; }
+}

@@ -1,70 +1,60 @@
-# ChartGenerator — Amigos do Mati
+# amigos do mati · chart generator
 
-ChartGenerator is a static web app that creates a Last.fm listening chart from a user's top albums. The Portuguese interface supports a 1 × 1 to 20 × 20 grid and lets users preview and export the result as a PNG.
+Aplicação estática para montar charts com os álbuns mais ouvidos de um perfil no Last.fm.
 
-## Features
+## Usar
 
-- Load top albums for 7 days, 1 month, 3 months, 6 months, 1 year, or all time.
-- Choose a 3 × 3, 5 × 5, or 10 × 10 preset, or enter custom dimensions.
-- Preview album artwork in a responsive grid.
-- Export charts with the existing `html2canvas` implementation.
-- Uses no backend or build tool.
+Abra `index.html` ou sirva a pasta em um servidor estático. Para publicar, envie os arquivos da raiz e a pasta `assets` juntos. Não há compilação nem dependências de produção para instalar.
 
-## Technology
+Após atualizar uma instalação existente, recarregue a página. As referências aos scripts e ao CSS incluem uma versão para evitar a combinação de arquivos antigos com a nova interface.
 
-- HTML5
-- CSS
-- Vanilla JavaScript
-- Last.fm API `user.gettopalbums`
-- `html2canvas` for PNG export
+Preencha o usuário, escolha o período e o formato e clique em **gerar chart**. As preferências ficam neste navegador; a aplicação não consulta o Last.fm automaticamente ao abrir.
 
-## Project files
+Na prévia, **ampliar** mantém as capas em um tamanho legível e permite rolagem horizontal. Cada álbum abre seus detalhes. No celular, gerar um chart leva à prévia e a barra de exportação permanece acessível.
 
-| Path | Purpose |
-| --- | --- |
-| `index.html` | Page structure and Portuguese interface |
-| `style.css` | Responsive layout and visual styling |
-| `script.js` | Last.fm requests, chart rendering, and export logic |
-| `ChartGenerator.zip` | Archived copy of the project |
-| `README.md` | Project documentation |
+## Exportação
 
-There is currently no `assets/`, `tests/`, package manifest, build configuration, or backend directory.
+O PNG é desenhado diretamente no canvas, sem carregar bibliotecas externas. Usa a identidade e o período do resultado carregado. A exportação possui cancelamento, fila de até seis capas simultâneas e um limite global de espera. Capas sem permissão de CORS ou indisponíveis recebem uma ilustração local; a interface informa a quantidade substituída.
 
-## Run locally
+A qualidade padrão limita a imagem a dois milhões de pixels e 2400 pixels por lado. A alta qualidade limita a quatro milhões de pixels e 4096 por lado. As dimensões exatas dependem do formato; a largura e a altura são exibidas antes do download.
 
-The app is made entirely of static files. Start a local server in the project directory:
+O link de salvar permanece disponível caso o navegador não inicie o download automaticamente. Compartilhamento nativo aparece apenas quando o navegador suporta compartilhar arquivos PNG.
 
-```sh
-python -m http.server 8000
+## Estrutura
+
+- `index.html` e `style.css`: interface responsiva em rosa, lilás e ciano.
+- `chart-core.js`: validação, preferências, identidade e limites da imagem.
+- `lastfm.js`: consultas com cancelamento, tempo limite de 15 segundos, paginação e cache de cinco minutos, limitado a 12 consultas.
+- `chart-export.js`: geração de PNG, carregamento de capas e placeholders.
+- `script.js`: estados e interações da interface.
+- `assets/` e `favicon.ico`: identidade visual própria do projeto.
+- `tests/`: verificações automatizadas, sem dependências externas.
+
+## Testes
+
+Com Node.js 20 ou superior:
+
+```powershell
+node --test tests/core.test.cjs tests/api.test.cjs tests/export.test.cjs tests/app.test.cjs tests/markup.test.cjs
 ```
 
-Open `http://localhost:8000` and enter a Last.fm username.
+Os testes cobrem a lógica com respostas simuladas, a integração dos controles e os limites dos 400 formatos possíveis em ambas as qualidades.
 
-VS Code's Live Server extension is also sufficient. Internet access is required for Last.fm data and remote cover images.
+Verificado em 19 de novembro de 2026:
 
-## Current behavior
+- 30 testes automatizados passaram.
+- A página, `script.js`, `lastfm.js` e `chart-export.js` responderam com HTTP 200 em um servidor estático local.
+- A consulta real ao Last.fm não foi realizada nesta verificação.
 
-The basic flow is implemented in `script.js`:
+## Conferência manual
 
-1. `lastFmRequest()` calls the Last.fm JSON API.
-2. `fetchTopAlbums()` maps returned albums to rank, name, artist, and cover fields.
-3. `loadChart()` validates the username and grid size, loads the albums, and renders the preview.
-4. `updatePreview()` rerenders existing results when columns or rows change.
-5. `exportChart()` prepares an export container and calls `html2canvas()`.
+1. Gerar um chart com um usuário válido e confirmar que a grade substitui a tela vazia.
+2. Trocar de período durante uma busca e conferir que aparece o período mais recente.
+3. Alterar de 5 × 5 para 6 × 6 e confirmar a busca de 36 álbuns, se disponíveis.
+4. Testar usuário inexistente, resultado sem álbuns e conexão indisponível.
+5. Abrir detalhes por toque e teclado; fechar com o botão ou Escape.
+6. Em 320, 390, 760 e 1280 pixels, conferir campos, grade ajustada e rolagem ampliada.
+7. Exportar 1 × 20, 20 × 1 e 20 × 20; cancelar uma exportação e iniciar outra.
+8. Conferir as capas no PNG, o link manual de salvar e o compartilhamento, quando disponível.
 
-The Last.fm API key is currently embedded in `script.js`. For a maintained deployment, move this configuration to an environment or server-side service and rotate the exposed key.
-
-## Known integration gaps
-
-The page and script are currently out of sync:
-
-- `index.html` references `chart-core.js`, `lastfm.js`, and `chart-export.js`, but those files do not exist.
-- The favicon and Apple touch icon referenced in `assets/` are missing.
-- `script.js` requires an `export-container` element that is absent from `index.html`.
-- `html2canvas` is not loaded by the page.
-- `chart-grid` starts with `hidden`; `script.js` never reveals it after loading.
-- Form submission is not prevented by the current click-based handler.
-- UI controls for presets, fit/detail preview, album details, retry, quality, cancellation, and sharing do not have complete handlers.
-- There are no automated tests or test scripts.
-
-Because these issues prevent the full interface from working reliably, the app should be considered a work in progress. Verify chart loading and PNG download in a browser after integrating the missing modules and elements.
+Os dados dependem da disponibilidade do Last.fm. A chave pública da API usada pelo projeto está configurada em `script.js`.

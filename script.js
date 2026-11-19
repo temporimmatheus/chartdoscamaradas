@@ -1,286 +1,255 @@
-const API_KEY = '8b2854f4f61653b88a4161656c020b46'; 
-const usernameInput = document.getElementById('username');
-const fetchBtn = document.getElementById('fetch-btn');
-const periodSelect = document.getElementById('period');
-const colsInput = document.getElementById('cols');
-const rowsInput = document.getElementById('rows');
-const exportBtn = document.getElementById('export-btn');
-const chartGrid = document.getElementById('chart-grid');
-const statusMsg = document.getElementById('status');
-const exportContainer = document.getElementById('export-container');
+(function () {
+  'use strict';
+  const Core = ChartCore;
+  const client = LastfmClient.createClient({ apiKey: '8b2854f4f61653b88a4161656c020b46' });
+  const $ = id => document.getElementById(id);
+  const ui = Object.fromEntries(['chart-form','settings-fields','username','period','cols','rows','fetch-btn','export-btn','status','error','retry-btn','chart-grid','chart-container','chart-summary','chart-user','chart-meta','empty-state','empty-title','empty-description','view-fit','view-detail','loading-indicator','quality','export-info','cancel-export','download-link','share-btn','album-dialog','close-dialog','album-cover','album-rank','album-title','album-artist','album-plays','album-link'].map(id => [id, $(id)]));
+  const gate = Core.createRequestGate();
+  const state = { snapshot: null, loading: false, exporting: false, exportController: null,
+    view: 'fit', cards: new Map(), download: null };
+  const integerFormat = new Intl.NumberFormat('pt-BR');
+  const rawConfig = () => ({ username: ui.username.value, period: ui.period.value, cols: ui.cols.value, rows: ui.rows.value });
+  const getConfig = () => Core.config(rawConfig());
 
-let currentAlbums = [];
-let isLoading = false;
-
-function lastFmRequest(method, params) {
-    return new Promise((resolve, reject) => {
-        const defaultParams = {
-            method: method,
-            api_key: API_KEY,
-            format: 'json'
-        };
-        const allParams = { ...defaultParams, ...params };
-        const queryString = Object.entries(allParams)
-            .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-            .join('&');
-        const callbackName = `jsonp_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
-        const url = `https://ws.audioscrobbler.com/2.0/?${queryString}&callback=${callbackName}`;
-
-        const script = document.createElement('script');
-        script.src = url;
-        window[callbackName] = function(data) {
-            delete window[callbackName];
-            document.body.removeChild(script);
-            if (data && data.error) {
-                reject(new Error(data.message || `Erro ${data.error}`));
-            } else {
-                resolve(data);
-            }
-        };
-        script.onerror = function() {
-            delete window[callbackName];
-            document.body.removeChild(script);
-            reject(new Error('Falha ao carregar dados. Verifique sua conexão.'));
-        };
-        document.body.appendChild(script);
+  function preferences() {
+    try { localStorage.setItem('chartgen.preferences.v2', JSON.stringify({ ...rawConfig(), view: state.view, quality: ui.quality.value })); } catch { /* Storage may be unavailable in private mode. */ }
+  }
+  function message(text) { ui.status.textContent = text; }
+  function clearError() { ui.error.hidden = true; ui.error.textContent = ''; ui['retry-btn'].hidden = true; }
+  function showError(text, retry = false) { ui.error.textContent = text; ui.error.hidden = false; ui['retry-btn'].hidden = !retry; }
+  function selectionMatches() { try { return Core.matches(state.snapshot, getConfig()); } catch { return false; } }
+  function clearDownload() {
+    if (state.download) URL.revokeObjectURL(state.download.url);
+    state.download = null;
+    ui['download-link'].hidden = true;
+    ui['download-link'].removeAttribute('href');
+    ui['share-btn'].hidden = true;
+  }
+  function controls() {
+    ui['fetch-btn'].disabled = state.loading || state.exporting;
+    ui['settings-fields'].disabled = state.exporting;
+    ui.quality.disabled = state.exporting;
+    ui['export-btn'].disabled = state.exporting || state.loading || !state.snapshot?.albums.length || !selectionMatches();
+    ui['cancel-export'].hidden = !state.exporting;
+    ui['loading-indicator'].hidden = !state.loading;
+    ui['chart-container'].setAttribute('aria-busy', String(state.loading));
+    document.querySelectorAll('[data-size]').forEach(button => {
+      const selected = Number(ui.cols.value) === Number(button.dataset.size) && Number(ui.rows.value) === Number(button.dataset.size);
+      button.setAttribute('aria-pressed', String(selected));
     });
-}
-
-async function fetchTopAlbums(username, period, limit) {
-    if (!username || username.trim() === '') {
-        throw new Error('Informe um nome de usuário.');
+    if (!state.exporting) {
+      if (state.snapshot?.albums.length) {
+        const layout = Core.exportLayout(state.snapshot.cols, state.snapshot.rows, ui.quality.value);
+        ui['export-info'].textContent = `${layout.width} × ${layout.height} px`;
+      } else ui['export-info'].textContent = '';
     }
-    const data = await lastFmRequest('user.gettopalbums', {
-        user: username.trim(),
-        period: period,
-        limit: limit
+  }
+  function empty(title, description) {
+    ui['empty-title'].textContent = title; ui['empty-description'].textContent = description;
+    ui['empty-state'].hidden = false; ui['chart-grid'].hidden = true;
+  }
+  function clearResult(title = 'Nenhum chart gerado', description = 'Preencha seu usuário e clique em Gerar chart.') {
+    state.snapshot = null; state.cards.clear(); ui['chart-grid'].replaceChildren();
+    ui['chart-summary'].hidden = true; clearDownload(); empty(title, description);
+  }
+  function setView(view) {
+    state.view = view === 'detail' ? 'detail' : 'fit';
+    ui['chart-container'].dataset.view = state.view;
+    ui['view-fit'].setAttribute('aria-pressed', String(state.view === 'fit'));
+    ui['view-detail'].setAttribute('aria-pressed', String(state.view === 'detail'));
+    preferences();
+  }
+  function validation(focus = false) {
+    ui.username.removeAttribute('aria-invalid');
+    for (const field of [ui.cols, ui.rows]) {
+      const number = Number(field.value);
+      const invalid = !field.value.trim() || !Number.isInteger(number) || number < 1 || number > 20;
+      field.setAttribute('aria-invalid', String(invalid));
+    }
+    try { return getConfig(); }
+    catch (error) {
+      const invalidSize = [ui.cols, ui.rows].find(field => field.getAttribute('aria-invalid') === 'true');
+      if (!invalidSize) ui.username.setAttribute('aria-invalid', 'true');
+      showError(error.message);
+      if (focus) (invalidSize || ui.username).focus();
+      return null;
+    }
+  }
+  function makeCard(album, index) {
+    const item = document.createElement('div'); item.className = 'cell'; item.setAttribute('role', 'listitem');
+    const button = document.createElement('button'); button.className = 'album-card'; button.type = 'button';
+    button.setAttribute('aria-label', `${album.rank}. ${album.name}, ${album.artist}. Ver detalhes.`);
+    button.title = `${album.name} — ${album.artist}`;
+    button.addEventListener('click', () => details(album));
+    const cover = document.createElement('span'); cover.className = 'cover';
+    const record = document.createElement('span'); record.className = 'cover-record'; record.setAttribute('aria-hidden', 'true'); cover.append(record);
+    if (album.image) {
+      const image = document.createElement('img');
+      image.alt = ''; image.width = image.height = 300;
+      image.loading = index < 10 ? 'eager' : 'lazy'; image.decoding = 'async'; image.referrerPolicy = 'no-referrer';
+      image.addEventListener('error', () => { image.remove(); }, { once: true });
+      image.src = album.image; cover.append(image);
+    }
+    button.append(cover);
+    for (const [className, text] of [['rank', `#${album.rank}`], ['album-name', album.name], ['artist-name', album.artist]]) {
+      const span = document.createElement('span'); span.className = className; span.textContent = text; button.append(span);
+    }
+    item.append(button); return item;
+  }
+  function render(snapshot) {
+    clearDownload();
+    ui['chart-summary'].hidden = false;
+    ui['chart-user'].textContent = `@${snapshot.username}`;
+    const shown = snapshot.albums.length, slots = snapshot.cols * snapshot.rows;
+    ui['chart-meta'].textContent = `${Core.PERIODS[snapshot.period]} · ${snapshot.cols} × ${snapshot.rows} · ${integerFormat.format(shown)} ${shown === 1 ? 'álbum' : 'álbuns'}`;
+    if (!shown) {
+      ui['chart-grid'].replaceChildren(); state.cards.clear();
+      empty('Nenhum álbum neste período', 'Escolha outro período ou confira se este perfil tem scrobbles de álbuns.');
+      return;
+    }
+    const fragment = document.createDocumentFragment(), nextCards = new Map();
+    snapshot.albums.forEach((album, index) => {
+      const key = JSON.stringify([album.rank, album.name, album.artist, album.image, album.playcount, album.url]);
+      const card = state.cards.get(key) || makeCard(album, index);
+      fragment.append(card); nextCards.set(key, card);
     });
-    if (!data.topalbums || !data.topalbums.album) {
-        throw new Error('Usuário não encontrado ou sem scrobbles.');
+    for (let index = shown; index < slots; index++) {
+      const key = `empty-${index}`;
+      let card = state.cards.get(key);
+      if (!card) { card = document.createElement('div'); card.className = 'empty-cell'; card.textContent = '—'; card.setAttribute('aria-hidden', 'true'); }
+      fragment.append(card); nextCards.set(key, card);
     }
-    let albums = data.topalbums.album;
-    if (!Array.isArray(albums)) albums = [albums];
-    return albums.map((album, index) => ({
-        rank: index + 1,
-        name: album.name,
-        artist: album.artist?.name || 'Artista desconhecido',
-        image: album.image && album.image.length > 0
-            ? album.image.find(img => img.size === 'extralarge')?.['#text']
-              || album.image.find(img => img.size === 'large')?.['#text']
-              || album.image[0]?.['#text']
-              || ''
-            : ''
-    }));
-}
-
-function renderAlbums(container, albums, cols, rows, options = {}) {
-    const grid = container;
-    grid.innerHTML = '';
-    const totalCells = cols * rows;
-    const display = albums.slice(0, totalCells);
-
-    const gap = options.gap || 12;
-    const imgSize = options.imgSize || 100;
-    const fontSize = options.fontSize || 1;
-    const padding = options.padding || 6;
-
-    grid.style.display = 'grid';
-    grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-    grid.style.gap = `${gap}px`;
-
-    if (display.length === 0) {
-        grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; padding:40px; color:#888;">Nenhum álbum encontrado.</p>';
-        return;
-    }
-
-    display.forEach((album) => {
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        cell.style.padding = `${padding}px`;
-
-        const img = document.createElement('img');
-        img.src = album.image || 'https://via.placeholder.com/150?text=No+Cover';
-        img.alt = album.name;
-        img.style.width = '100%';
-        img.style.aspectRatio = '1/1';
-        img.style.objectFit = 'cover';
-        img.style.borderRadius = `${options.borderRadius || 10}px`;
-        cell.appendChild(img);
-
-        const rank = document.createElement('div');
-        rank.className = 'rank';
-        rank.textContent = `#${album.rank}`;
-        rank.style.fontSize = `${0.8 * fontSize}rem`;
-        cell.appendChild(rank);
-
-        const name = document.createElement('div');
-        name.className = 'album-name';
-        name.textContent = album.name;
-        name.style.fontSize = `${0.9 * fontSize}rem`;
-        cell.appendChild(name);
-
-        const artist = document.createElement('div');
-        artist.className = 'artist-name';
-        artist.textContent = album.artist;
-        artist.style.fontSize = `${0.75 * fontSize}rem`;
-        cell.appendChild(artist);
-
-        grid.appendChild(cell);
-    });
-
-    const remaining = totalCells - display.length;
-    for (let i = 0; i < remaining; i++) {
-        const empty = document.createElement('div');
-        empty.className = 'cell';
-        empty.style.backgroundColor = 'rgba(255,255,255,0.03)';
-        empty.style.aspectRatio = '1/1';
-        empty.style.display = 'flex';
-        empty.style.alignItems = 'center';
-        empty.style.justifyContent = 'center';
-        empty.style.color = '#555';
-        empty.textContent = '—';
-        grid.appendChild(empty);
-    }
-}
-
-function renderPreview(albums, cols, rows) {
-    renderAlbums(chartGrid, albums, cols, rows, {
-        gap: 12,
-        padding: 6,
-        borderRadius: 10,
-        fontSize: 1
-    });
-}
-
-function exportChart() {
-    const cols = parseInt(colsInput.value, 10) || 5;
-    const rows = parseInt(rowsInput.value, 10) || 5;
-
-    const container = exportContainer;
-    container.style.width = '1200px';
-    container.style.padding = '30px';
-    container.style.backgroundColor = '#1a1a2e';
-    container.style.borderRadius = '20px';
-    container.style.display = 'block';
-
-    const grid = document.createElement('div');
-    grid.style.display = 'grid';
-    grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-    grid.style.gap = '20px';
-    container.appendChild(grid);
-
-
-    renderAlbums(grid, currentAlbums, cols, rows, {
-        gap: 20,
-        padding: 12,
-        borderRadius: 14,
-        fontSize: 1.4 // aumenta fonte
-    });
-
-    const images = grid.querySelectorAll('img');
-    let loaded = 0;
-    const total = images.length;
-    if (total === 0) {
-        doExport(container, grid);
-        return;
-    }
-    images.forEach(img => {
-        if (img.complete) {
-            loaded++;
-            if (loaded === total) doExport(container, grid);
-        } else {
-            img.onload = () => {
-                loaded++;
-                if (loaded === total) doExport(container, grid);
-            };
-            img.onerror = () => {
-                loaded++;
-                if (loaded === total) doExport(container, grid);
-            };
-        }
-    });
-}
-
-function doExport(container, grid) {
-    html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#1a1a2e',
-        logging: false,
-        width: 1200,
-        height: container.scrollHeight
-    }).then(canvas => {
-        container.innerHTML = '';
-        container.style.display = 'none';
-
-        const link = document.createElement('a');
-        link.download = `lastfm-chart-${usernameInput.value || 'user'}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-    }).catch(err => {
-        console.error('Erro ao exportar:', err);
-        statusMsg.textContent = '❌ Erro ao gerar imagem.';
-        container.innerHTML = '';
-        container.style.display = 'none';
-    });
-}
-
-
-async function loadChart() {
-    const username = usernameInput.value.trim();
-    if (!username) {
-        statusMsg.textContent = '⚠️ Digite um usuário.';
-        return;
-    }
-
-    const period = periodSelect.value;
-    const cols = parseInt(colsInput.value, 10) || 5;
-    const rows = parseInt(rowsInput.value, 10) || 5;
-    const limit = cols * rows;
-
-    if (limit > 400) {
-        statusMsg.textContent = '⚠️ Máximo 20×20 = 400 células.';
-        return;
-    }
-
-    isLoading = true;
-    fetchBtn.disabled = true;
-    exportBtn.disabled = true;
-    statusMsg.textContent = '⏳ Carregando...';
-
+    state.cards = nextCards;
+    ui['chart-grid'].replaceChildren(fragment);
+    ui['chart-container'].style.setProperty('--cols', snapshot.cols);
+    ui['chart-container'].dataset.dense = String(snapshot.cols > 7);
+    ui['chart-grid'].hidden = false; ui['empty-state'].hidden = true;
+  }
+  async function loadChart({ focus = false, refresh = false } = {}) {
+    if (state.exporting) return;
+    const config = validation(focus);
+    if (!config) { gate.cancel(); state.loading = false; controls(); return; }
+    const key = Core.requestKey(config);
+    if (gate.active()?.key === key) return;
+    const ticket = gate.start(key);
+    state.loading = true; clearError(); clearDownload(); preferences(); controls();
+    message('Buscando álbuns no Last.fm…');
     try {
-        const albums = await fetchTopAlbums(username, period, Math.min(limit, 1000));
-        currentAlbums = albums;
-        renderPreview(albums, cols, rows);
-        statusMsg.textContent = `✅ ${albums.length} álbuns carregados. Exibindo ${Math.min(limit, albums.length)}.`;
-        exportBtn.disabled = false;
+      const result = await client.getAlbums({ ...config, signal: ticket.controller.signal, refresh });
+      if (!gate.isCurrent(ticket)) return;
+      state.snapshot = { ...config, albums: result.albums, total: result.total };
+      render(state.snapshot);
+      if (!result.albums.length) message('Nenhum álbum encontrado neste período.');
+      else if (result.albums.length < config.limit) message(`${result.albums.length} álbuns encontrados. Os espaços restantes ficarão vazios.`);
+      else message(`${result.albums.length} álbuns carregados.${result.cached ? ' Resultado recente reutilizado.' : ''}`);
+      if (focus && window.matchMedia?.('(max-width: 760px)').matches) {
+        const preview = $('preview');
+        preview.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+        preview.focus({ preventScroll: true });
+      }
     } catch (error) {
-        statusMsg.textContent = `❌ ${error.message}`;
-        chartGrid.innerHTML = '';
-        exportBtn.disabled = true;
+      if (!gate.isCurrent(ticket)) return;
+      clearResult('Não foi possível carregar o chart', 'Confira a mensagem de erro e tente novamente.');
+      message('A busca não foi concluída.'); showError(error.message, true);
     } finally {
-        isLoading = false;
-        fetchBtn.disabled = false;
+      if (gate.active() === ticket) { gate.finish(ticket); state.loading = false; controls(); }
     }
-}
+  }
+  function identityEdited() {
+    if (state.exporting) return;
+    gate.cancel(); state.loading = false; clearError(); clearDownload();
+    ui.username.removeAttribute('aria-invalid'); preferences(); controls();
+    message(selectionMatches() && state.snapshot?.albums.length ? 'Chart pronto para exportar.' : 'Clique em Gerar chart para carregar este usuário e período.');
+  }
+  function sizeEdited() {
+    if (state.exporting) return;
+    preferences();
+    const config = validation();
+    if (!config) { gate.cancel(); state.loading = false; controls(); return; }
+    clearError();
+    if (state.snapshot && Core.identity(state.snapshot) === Core.identity(config)) loadChart();
+    else { gate.cancel(); state.loading = false; controls(); message('Clique em Gerar chart para carregar esta configuração.'); }
+  }
+  function details(album) {
+    ui['album-rank'].textContent = `ÁLBUM #${album.rank}`;
+    ui['album-title'].textContent = album.name; ui['album-artist'].textContent = album.artist;
+    ui['album-plays'].textContent = `${integerFormat.format(album.playcount)} ${album.playcount === 1 ? 'reprodução' : 'reproduções'} neste período`;
+    ui['album-link'].hidden = !album.url;
+    if (album.url) ui['album-link'].href = album.url; else ui['album-link'].removeAttribute('href');
+    const image = ui['album-cover']; image.hidden = true; image.removeAttribute('src');
+    image.onload = () => { image.hidden = false; }; image.onerror = () => { image.hidden = true; };
+    if (album.image) image.src = album.image;
+    ui['album-dialog'].showModal();
+  }
+  async function exportChart() {
+    if (state.exporting || state.loading || !selectionMatches() || !state.snapshot?.albums.length) return;
+    state.exporting = true; state.exportController = new AbortController(); clearError(); clearDownload(); controls();
+    const snapshot = { ...state.snapshot, albums: state.snapshot.albums.map(album => ({ ...album })) };
+    const controller = state.exportController;
+    let canvas;
+    try {
+      message('Preparando PNG…');
+      const rendered = await ChartExporter.render(snapshot, { quality: ui.quality.value, signal: controller.signal,
+        onProgress: (done, total) => { ui['export-info'].textContent = `Preparando capas: ${done} de ${total}`; } });
+      canvas = rendered.canvas;
+      ui['export-info'].textContent = 'Finalizando PNG…';
+      const blob = await ChartExporter.toBlob(canvas);
+      if (controller.signal.aborted) throw new DOMException('Exportação cancelada.', 'AbortError');
+      const filename = Core.filename(snapshot), url = URL.createObjectURL(blob);
+      state.download = { blob, url, filename };
+      const link = ui['download-link']; link.href = url; link.download = filename; link.hidden = false; link.click();
+      if (navigator.canShare && typeof File !== 'undefined') {
+        try { ui['share-btn'].hidden = !navigator.canShare({ files: [new File([blob], filename, { type: 'image/png' })] }); } catch { ui['share-btn'].hidden = true; }
+      }
+      message(rendered.missing ? `PNG pronto. ${rendered.missing} capas indisponíveis foram substituídas por um disco ilustrado.` : 'PNG pronto. Se o download não iniciar, toque em Salvar PNG pronto.');
+    } catch (error) {
+      if (error.name === 'AbortError' || controller.signal.aborted) message('Exportação cancelada.');
+      else { showError(error.message || 'Não foi possível exportar. Tente a qualidade padrão.'); message('O chart continua disponível para uma nova tentativa.'); }
+    } finally {
+      if (canvas) canvas.width = canvas.height = 0;
+      state.exporting = false; state.exportController = null; controls();
+    }
+  }
 
-
-function updatePreview() {
-    if (currentAlbums.length === 0) return;
-    const cols = parseInt(colsInput.value, 10) || 5;
-    const rows = parseInt(rowsInput.value, 10) || 5;
-    renderPreview(currentAlbums, cols, rows);
-}
-
-fetchBtn.addEventListener('click', loadChart);
-usernameInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') loadChart();
-});
-
-periodSelect.addEventListener('change', loadChart);
-colsInput.addEventListener('change', updatePreview);
-rowsInput.addEventListener('change', updatePreview);
-
-exportBtn.addEventListener('click', exportChart);
-
-statusMsg.textContent = 'Digite um usuário e clique em "Gerar".';
+  ui['chart-form'].addEventListener('submit', event => { event.preventDefault(); loadChart({ focus: true }); });
+  ui['retry-btn'].addEventListener('click', () => loadChart({ focus: true, refresh: true }));
+  ui.username.addEventListener('input', identityEdited);
+  ui.period.addEventListener('change', () => {
+    identityEdited();
+    if (ui.username.value.trim()) loadChart();
+  });
+  for (const field of [ui.cols, ui.rows]) {
+    field.addEventListener('input', () => {
+      if (state.exporting) return;
+      gate.cancel(); state.loading = false; clearDownload(); controls();
+    });
+    field.addEventListener('change', sizeEdited);
+  }
+  document.querySelectorAll('[data-size]').forEach(button => button.addEventListener('click', () => {
+    if (state.exporting) return;
+    ui.cols.value = ui.rows.value = button.dataset.size; sizeEdited();
+  }));
+  ui['view-fit'].addEventListener('click', () => setView('fit'));
+  ui['view-detail'].addEventListener('click', () => setView('detail'));
+  ui.quality.addEventListener('change', () => { clearDownload(); preferences(); controls(); });
+  ui['export-btn'].addEventListener('click', exportChart);
+  ui['cancel-export'].addEventListener('click', () => state.exportController?.abort());
+  ui['close-dialog'].addEventListener('click', () => ui['album-dialog'].close());
+  ui['album-dialog'].addEventListener('click', event => { if (event.target === ui['album-dialog']) {
+    const rect = ui['album-dialog'].getBoundingClientRect();
+    if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) ui['album-dialog'].close();
+  } });
+  ui['share-btn'].addEventListener('click', async () => {
+    if (!state.download) return;
+    const { blob, filename } = state.download;
+    try { await navigator.share({ files: [new File([blob], filename, { type: 'image/png' })] }); }
+    catch (error) { if (error.name !== 'AbortError') showError('Não foi possível compartilhar. Use Salvar PNG pronto.'); }
+  });
+  let saved;
+  try { saved = Core.readPreferences(localStorage); } catch { saved = Core.readPreferences({ getItem: () => null }); }
+  ui.username.value = saved.username; ui.period.value = saved.period; ui.cols.value = saved.cols; ui.rows.value = saved.rows;
+  ui.quality.value = saved.quality; setView(saved.view); controls();
+  window.addEventListener('pagehide', () => { gate.cancel(); state.exportController?.abort(); clearDownload(); });
+  // Restore interactive controls when a browser resumes this page from its back/forward cache.
+  window.addEventListener('pageshow', event => { if (event.persisted) { state.loading = false; controls(); } });
+})();
