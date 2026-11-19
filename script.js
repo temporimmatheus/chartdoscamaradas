@@ -12,7 +12,7 @@
   const getConfig = () => Core.config(rawConfig());
 
   function preferences() {
-    try { localStorage.setItem('chartgen.preferences.v2', JSON.stringify({ ...rawConfig(), view: state.view, quality: ui.quality.value })); } catch { /* Storage may be unavailable in private mode. */ }
+    try { localStorage.setItem('chartgen.preferences.v2', JSON.stringify({ ...rawConfig(), view: state.view, quality: 'standard' })); } catch { /* Storage may be unavailable in private mode. */ }
   }
   function message(text) { ui.status.textContent = text; }
   function clearError() { ui.error.hidden = true; ui.error.textContent = ''; ui['retry-btn'].hidden = true; }
@@ -28,7 +28,8 @@
   function controls() {
     ui['fetch-btn'].disabled = state.loading || state.exporting;
     ui['settings-fields'].disabled = state.exporting;
-    ui.quality.disabled = state.exporting;
+    ui.quality.value = 'standard';
+    ui.quality.disabled = true;
     ui['export-btn'].disabled = state.exporting || state.loading || !state.snapshot?.albums.length || !selectionMatches();
     ui['cancel-export'].hidden = !state.exporting;
     ui['loading-indicator'].hidden = !state.loading;
@@ -231,7 +232,8 @@
   }));
   ui['view-fit'].addEventListener('click', () => setView('fit'));
   ui['view-detail'].addEventListener('click', () => setView('detail'));
-  ui.quality.addEventListener('change', () => { clearDownload(); preferences(); controls(); });
+  ui.quality.value = 'standard';
+  ui.quality.disabled = true;
   ui['export-btn'].addEventListener('click', exportChart);
   ui['cancel-export'].addEventListener('click', () => state.exportController?.abort());
   ui['close-dialog'].addEventListener('click', () => ui['album-dialog'].close());
@@ -248,7 +250,7 @@
   let saved;
   try { saved = Core.readPreferences(localStorage); } catch { saved = Core.readPreferences({ getItem: () => null }); }
   ui.username.value = saved.username; ui.period.value = saved.period; ui.cols.value = saved.cols; ui.rows.value = saved.rows;
-  ui.quality.value = saved.quality; setView(saved.view); controls();
+  ui.quality.value = 'standard'; ui.quality.disabled = true; setView(saved.view); controls();
   window.addEventListener('pagehide', () => { gate.cancel(); state.exportController?.abort(); clearDownload(); });
   // Restore interactive controls when a browser resumes this page from its back/forward cache.
   window.addEventListener('pageshow', event => { if (event.persisted) { state.loading = false; controls(); } });

@@ -63,6 +63,11 @@ test('growing the grid requests the required number of albums',async()=>{
 test('invalid dimension changes cannot bypass the limit or enable export',async()=>{
   const a=app();await generate(a);a.els.cols.value='21';a.els.cols.emit('change');assert.equal(a.pending.length,1);assert.equal(a.els['export-btn'].disabled,true);assert.equal(a.els.error.hidden,false);
 });
+test('quality is always forced to standard',async()=>{
+  const a=app();await generate(a);
+  assert.equal(a.els.quality.value,'standard');
+  assert.equal(a.els.quality.disabled,true);
+});
 test('export is exclusive, preserves identity, and leaves a manual save link',async()=>{
   let resolve,renders=0;const a=app({render:()=>{renders++;return new Promise(r=>{resolve=r})},toBlob:async()=>new Blob(['PNG'],{type:'image/png'})});
   await generate(a);a.els['export-btn'].emit('click');a.els['export-btn'].emit('click');

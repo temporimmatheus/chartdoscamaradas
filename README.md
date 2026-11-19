@@ -16,7 +16,7 @@ Na prévia, **ampliar** mantém as capas em um tamanho legível e permite rolage
 
 O PNG é desenhado diretamente no canvas, sem carregar bibliotecas externas. Usa a identidade e o período do resultado carregado. A exportação possui cancelamento, fila de até seis capas simultâneas e um limite global de espera. Capas sem permissão de CORS ou indisponíveis recebem uma ilustração local; a interface informa a quantidade substituída.
 
-A qualidade padrão limita a imagem a dois milhões de pixels e 2400 pixels por lado. A alta qualidade limita a quatro milhões de pixels e 4096 por lado. As dimensões exatas dependem do formato; a largura e a altura são exibidas antes do download.
+A exportação sempre usa a qualidade padrão: até dois milhões de pixels e 2400 pixels por lado. As dimensões exatas dependem do formato; a largura e a altura são exibidas antes do download.
 
 O link de salvar permanece disponível caso o navegador não inicie o download automaticamente. Compartilhamento nativo aparece apenas quando o navegador suporta compartilhar arquivos PNG.
 

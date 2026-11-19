@@ -160,7 +160,7 @@ input,.album-name,.artist-name,.chart-summary h3,#album-title,#album-artist { te
 .empty-state h3,.album-dialog h2 { font-family:"Cascadia Code",Consolas,ui-monospace,monospace; font-size:1.15rem; }
 .intro { padding-top:40px; }
 @media (max-width:760px) {
-  body { padding-bottom:calc(172px + env(safe-area-inset-bottom)); }
-  .download-bar { position:fixed; left:12px; right:12px; bottom:8px; margin:0; }
+  body { padding-bottom:calc(220px + env(safe-area-inset-bottom)); }
+  .download-bar { position:fixed; left:12px; right:12px; bottom:calc(64px + env(safe-area-inset-bottom)); z-index:1000; margin:0; }
   #preview { scroll-margin-top:16px; }
 }
