@@ -21,15 +21,15 @@
     <header class="site-header">
       <a class="brand" href="./" aria-label="Amigos do Mati, início">
         <span class="brand-mark" aria-hidden="true"><span></span></span>
-        <span>amigos do mati<span class="brand-caption">seu som, em pequenos quadrados</span></span>
+        <span>amigos do mati<span class="brand-caption">Gerador de charts do Last.fm</span></span>
       </a>
-      <span class="header-note">feito de música <span aria-hidden="true">✳</span></span>
+      <span class="header-note">Gerador de charts <span aria-hidden="true">✳</span></span>
     </header>
     <main>
       <section class="intro" aria-labelledby="page-title">
         <p class="eyebrow">LAST.FM CHART GENERATOR</p>
-        <h1>O que anda tocando<br>no seu <span>mundo?</span></h1>
-        <p>Junte seus discos mais ouvidos em um chart.<br> Um pedacinho da sua fase, pronto para compartilhar.</p>
+        <h1>Crie seu chart<br>do <span>Last.fm</span></h1>
+        <p>Veja seus discos mais ouvidos em uma grade<br>pronta para compartilhar.</p>
       </section>
       <div class="workspace">
         <section class="settings panel" aria-labelledby="settings-title">
@@ -43,7 +43,7 @@
                 <p class="field-hint" id="username-hint">Só o nome de usuário, sem o link do perfil.</p>
               </div>
               <div class="field">
-                <label for="period">Qual fase?</label>
+                <label for="period">Período</label>
                 <select id="period" name="period">
                   <option value="7day">Últimos 7 dias</option>
                   <option value="1month" selected>Último mês</option>
@@ -76,7 +76,7 @@
         </section>
         <section id="preview" class="preview panel" aria-labelledby="preview-title" tabindex="-1">
           <div class="preview-header">
-            <div class="section-heading"><span class="step">02</span><h2 id="preview-title">Seu lado A</h2><span id="loading-indicator" class="spinner" aria-hidden="true" hidden></span></div>
+            <div class="section-heading"><span class="step">02</span><h2 id="preview-title">Prévia</h2><span id="loading-indicator" class="spinner" aria-hidden="true" hidden></span></div>
             <div class="view-switch" role="group" aria-label="Visualização da prévia">
               <button type="button" id="view-fit" aria-pressed="true">Ajustar à tela</button>
               <button type="button" id="view-detail" aria-pressed="false">Ampliar</button>
@@ -87,15 +87,15 @@
           <div id="chart-container" class="chart-container" data-view="fit" role="region" aria-label="Prévia do chart" tabindex="0" aria-busy="false">
             <div id="empty-state" class="empty-state">
               <div class="empty-art" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-              <h3 id="empty-title">Sua trilha sonora mora aqui.</h3>
-              <p id="empty-description">Informe seu usuário do Last.fm e deixe seus discos contarem o resto.</p>
+              <h3 id="empty-title">Seu chart aparecerá aqui.</h3>
+              <p id="empty-description">Informe seu usuário do Last.fm e clique em gerar meu chart.</p>
             </div>
             <div id="chart-grid" class="chart-grid" role="list" aria-label="Álbuns mais ouvidos" hidden></div>
           </div>
         </section>
       </div>
       <section class="download-bar" aria-label="Salvar chart">
-        <div class="download-copy"><strong>Leve essa fase com você.</strong><span id="export-info">PNG com capas, nomes e artistas.</span></div>
+        <div class="download-copy"><strong>Seu chart está pronto.</strong><span id="export-info">PNG com capas, nomes e artistas.</span></div>
         <div class="download-actions">
           <label class="sr-only" for="quality">Qualidade do PNG</label>
           <select id="quality"><option value="standard">Qualidade padrão</option><option value="high">Alta qualidade</option></select>
