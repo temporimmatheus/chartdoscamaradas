@@ -5,114 +5,111 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#fbf2f6">
   <meta name="description" content="Transforme seus álbuns mais ouvidos no Last.fm em um chart para guardar e compartilhar.">
-  <title>Amigos do Mati · Last.fm charts</title>
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <title>amigos do mati · last.fm charts</title>
+  <link rel="icon" href="favicon.ico?v=2" sizes="16x16 32x32">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png?v=2">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="style.css">
-  <script src="chart-core.js" defer></script>
-  <script src="lastfm.js" defer></script>
-  <script src="chart-export.js" defer></script>
-  <script src="script.js" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261119-5">
+  <script src="chart-core.js?v=20261119-5" defer></script>
+  <script src="lastfm.js?v=20261119-5" defer></script>
+  <script src="chart-export.js?v=20261119-5" defer></script>
+  <script src="script.js?v=20261119-5" defer></script>
 </head>
 <body>
-  <a class="skip-link" href="#preview">Pular para o chart</a>
+  <a class="skip-link" href="#preview">pular para o chart</a>
   <div class="app">
     <header class="site-header">
-      <a class="brand" href="./" aria-label="Amigos do Mati, início">
-        <span class="brand-mark" aria-hidden="true"><span></span></span>
-        <span>amigos do mati<span class="brand-caption">Gerador de charts do Last.fm</span></span>
+      <a class="brand" href="./" aria-label="amigos do mati, início">
+        <img class="brand-icon" src="assets/favicon-192.png" width="44" height="44" alt="">
+        <span>amigos do mati</span>
       </a>
-      <span class="header-note">Gerador de charts <span aria-hidden="true">✳</span></span>
     </header>
     <main>
       <section class="intro" aria-labelledby="page-title">
-        <p class="eyebrow">LAST.FM CHART GENERATOR</p>
-        <h1>Crie seu chart<br>do <span>Last.fm</span></h1>
-        <p>Veja seus discos mais ouvidos em uma grade<br>pronta para compartilhar.</p>
+        <h1 id="page-title">chart generator</h1>
       </section>
       <div class="workspace">
         <section class="settings panel" aria-labelledby="settings-title">
-          <div class="section-heading"><span class="step">01</span><h2 id="settings-title">Monte seu chart</h2></div>
+          <div class="section-heading"><span class="step">01</span><h2 id="settings-title">configurações</h2></div>
           <form id="chart-form" novalidate>
             <fieldset id="settings-fields">
-              <legend class="sr-only">Configurações do chart</legend>
+              <legend class="sr-only">configurações do chart</legend>
               <div class="field">
-                <label for="username">Seu usuário no Last.fm</label>
-                <input id="username" name="username" type="text" placeholder="ex.: seuusuario" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="100" required aria-describedby="username-hint">
-                <p class="field-hint" id="username-hint">Só o nome de usuário, sem o link do perfil.</p>
+                <label for="username">seu usuário no last.fm</label>
+                <input id="username" name="username" type="text" placeholder="seuusuario" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="100" required>
               </div>
               <div class="field">
-                <label for="period">Período</label>
+                <label for="period">período</label>
                 <select id="period" name="period">
-                  <option value="7day">Últimos 7 dias</option>
-                  <option value="1month" selected>Último mês</option>
-                  <option value="3month">Últimos 3 meses</option>
-                  <option value="6month">Últimos 6 meses</option>
-                  <option value="12month">Último ano</option>
-                  <option value="overall">Desde sempre</option>
+                  <option value="7day">últimos 7 dias</option>
+                  <option value="1month" selected>último mês</option>
+                  <option value="3month">últimos 3 meses</option>
+                  <option value="6month">últimos 6 meses</option>
+                  <option value="12month">último ano</option>
+                  <option value="overall">desde sempre</option>
                 </select>
               </div>
               <div class="field">
-                <span id="format-label" class="field-label">Formato</span>
+                <span id="format-label" class="field-label">formato</span>
                 <div class="presets" role="group" aria-labelledby="format-label">
                   <button type="button" data-size="3" aria-pressed="false">3 × 3</button>
                   <button type="button" data-size="5" aria-pressed="true">5 × 5</button>
                   <button type="button" data-size="10" aria-pressed="false">10 × 10</button>
                 </div>
                 <div class="dimensions">
-                  <div><label for="cols">Colunas</label><input type="number" id="cols" name="cols" value="5" min="1" max="20" step="1" inputmode="numeric" aria-describedby="size-hint"></div>
+                  <div><label for="cols">colunas</label><input type="number" id="cols" name="cols" value="5" min="1" max="20" step="1" inputmode="numeric" aria-describedby="size-hint"></div>
                   <span aria-hidden="true">×</span>
-                  <div><label for="rows">Linhas</label><input type="number" id="rows" name="rows" value="5" min="1" max="20" step="1" inputmode="numeric" aria-describedby="size-hint"></div>
+                  <div><label for="rows">linhas</label><input type="number" id="rows" name="rows" value="5" min="1" max="20" step="1" inputmode="numeric" aria-describedby="size-hint"></div>
                 </div>
-                <p class="field-hint" id="size-hint">De 1 a 20 por lado · até 400 discos.</p>
+                <p class="field-hint" id="size-hint">de 1 a 20 por lado · até 400 discos.</p>
               </div>
-              <button id="fetch-btn" class="button primary generate" type="submit"><span aria-hidden="true">✳</span> Gerar meu chart</button>
+              <button id="fetch-btn" class="button primary generate" type="submit">gerar chart</button>
             </fieldset>
           </form>
-          <p id="status" class="status" role="status" aria-live="polite" aria-atomic="true">Escolha um usuário para começar.</p>
+          <p id="status" class="status" role="status" aria-live="polite" aria-atomic="true">escolha um usuário para começar.</p>
           <p id="error" class="error" role="alert" hidden></p>
-          <button type="button" id="retry-btn" class="button secondary" hidden>Tentar novamente</button>
+          <button type="button" id="retry-btn" class="button secondary" hidden>tentar novamente</button>
         </section>
         <section id="preview" class="preview panel" aria-labelledby="preview-title" tabindex="-1">
           <div class="preview-header">
-            <div class="section-heading"><span class="step">02</span><h2 id="preview-title">Prévia</h2><span id="loading-indicator" class="spinner" aria-hidden="true" hidden></span></div>
-            <div class="view-switch" role="group" aria-label="Visualização da prévia">
-              <button type="button" id="view-fit" aria-pressed="true">Ajustar à tela</button>
-              <button type="button" id="view-detail" aria-pressed="false">Ampliar</button>
+            <div class="section-heading"><span class="step">02</span><h2 id="preview-title">prévia</h2><span id="loading-indicator" class="spinner" aria-hidden="true" hidden></span></div>
+            <div class="view-switch" role="group" aria-label="visualização da prévia">
+              <button type="button" id="view-fit" aria-pressed="true">ajustar à tela</button>
+              <button type="button" id="view-detail" aria-pressed="false">ampliar</button>
             </div>
           </div>
           <div id="chart-summary" class="chart-summary" hidden><h3 id="chart-user"></h3><p id="chart-meta"></p></div>
-          <p id="preview-hint" class="preview-hint" hidden>Toque em um disco para ver os detalhes. A visualização não altera o PNG.</p>
-          <div id="chart-container" class="chart-container" data-view="fit" role="region" aria-label="Prévia do chart" tabindex="0" aria-busy="false">
+          <div id="chart-container" class="chart-container" data-view="fit" role="region" aria-label="prévia do chart" tabindex="0" aria-busy="false">
             <div id="empty-state" class="empty-state">
               <div class="empty-art" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-              <h3 id="empty-title">Seu chart aparecerá aqui.</h3>
-              <p id="empty-description">Informe seu usuário do Last.fm e clique em gerar meu chart.</p>
+              <h3 id="empty-title">nenhum chart gerado</h3>
+              <p id="empty-description">preencha seu usuário para começar.</p>
             </div>
-            <div id="chart-grid" class="chart-grid" role="list" aria-label="Álbuns mais ouvidos" hidden></div>
+            <div id="chart-grid" class="chart-grid" role="list" aria-label="álbuns mais ouvidos" hidden></div>
           </div>
         </section>
       </div>
-      <section class="download-bar" aria-label="Salvar chart">
-        <div class="download-copy"><strong>Seu chart está pronto.</strong><span id="export-info">PNG com capas, nomes e artistas.</span></div>
+      <section class="download-bar" aria-label="salvar chart">
+        <div class="download-copy"><strong>exportar png</strong><span id="export-info"></span></div>
         <div class="download-actions">
-          <label class="sr-only" for="quality">Qualidade do PNG</label>
-          <select id="quality"><option value="standard">Qualidade padrão</option><option value="high">Alta qualidade</option></select>
-          <button id="export-btn" type="button" class="button primary" disabled><span aria-hidden="true">↓</span> Baixar PNG</button>
-          <button id="cancel-export" type="button" class="button secondary" hidden>Cancelar</button>
-          <a id="download-link" class="save-link" hidden>Salvar PNG pronto</a>
-          <button id="share-btn" type="button" class="button secondary" hidden>Compartilhar</button>
+          <label class="sr-only" for="quality">qualidade do png</label>
+          <select id="quality"><option value="standard">qualidade padrão</option><option value="high">alta qualidade</option></select>
+          <button id="export-btn" type="button" class="button primary" disabled><span aria-hidden="true">↓</span> baixar png</button>
+          <button id="cancel-export" type="button" class="button secondary" hidden>cancelar</button>
+          <a id="download-link" class="save-link" hidden>salvar png pronto</a>
+          <button id="share-btn" type="button" class="button secondary" hidden>compartilhar</button>
         </div>
       </section>
     </main>
-    <footer class="site-footer"><span>amigos do mati <span aria-hidden="true">✳</span></span><span>Dados e capas do <a href="https://www.last.fm" target="_blank" rel="noopener noreferrer">Last.fm</a>.</span></footer>
+    <footer class="site-footer"><span>amigos do mati</span><span>dados e capas do <a href="https://www.last.fm" target="_blank" rel="noopener noreferrer">last.fm</a>.</span></footer>
   </div>
   <dialog id="album-dialog" class="album-dialog" aria-labelledby="album-title" aria-describedby="album-artist">
-    <button id="close-dialog" class="dialog-close" type="button" aria-label="Fechar detalhes">×</button>
+    <button id="close-dialog" class="dialog-close" type="button" aria-label="fechar detalhes">×</button>
     <div class="dialog-cover cover"><img id="album-cover" alt="" hidden><span class="cover-record" aria-hidden="true"></span></div>
     <p id="album-rank" class="eyebrow"></p><h2 id="album-title"></h2><p id="album-artist"></p><p id="album-plays" class="field-hint"></p>
-    <a id="album-link" class="button secondary" target="_blank" rel="noopener noreferrer" hidden>Abrir no Last.fm ↗</a>
+    <a id="album-link" class="button secondary" target="_blank" rel="noopener noreferrer" hidden>abrir no last.fm ↗</a>
   </dialog>
 </body>
 </html>
+
