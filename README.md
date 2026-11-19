@@ -1,4 +1,4 @@
-# amigos do mati · chart generator
+# chart.fm · chart generator
 
 Aplicação estática para montar charts com os álbuns mais ouvidos de um perfil no Last.fm.
 
