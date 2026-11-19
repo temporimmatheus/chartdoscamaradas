@@ -99,6 +99,7 @@ input[aria-invalid="true"] { border-color:#b82e50; background:#fff3f5; }
 .export-action:disabled { background:transparent; opacity:.42; }
 .site-footer { display:flex; flex-direction:column; align-items:flex-start; gap:5px; padding:12px 0 32px; color:var(--muted); font-size:.72rem; }
 .footer-brand { font-weight:600; }
+.footer-credit { font-weight:400; }
 .footer-details { display:block; }
 .site-share-button { min-height:36px; padding:6px 9px 6px 4px; border:1px solid transparent; border-radius:9px; background:transparent; color:var(--muted); font-size:.72rem; }
 .site-share-button:hover { border-color:var(--line); background:#fff; color:var(--rose); }
