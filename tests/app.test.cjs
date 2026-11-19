@@ -63,7 +63,17 @@ test('growing the grid requests the required number of albums',async()=>{
 test('invalid dimension changes cannot bypass the limit or enable export',async()=>{
   const a=app();await generate(a);a.els.cols.value='21';a.els.cols.emit('change');assert.equal(a.pending.length,1);assert.equal(a.els['export-btn'].disabled,true);assert.equal(a.els.error.hidden,false);
 });
-test('export is exclusive, preserves identity, and enables sharing',async()=>{
+test('sharing starts a new export without downloading first',async()=>{
+  let resolve,renders=0;const a=app({render:()=>{renders++;return new Promise(r=>{resolve=r})},toBlob:async()=>new Blob(['PNG'],{type:'image/png'})});
+  await generate(a);
+  assert.equal(a.els['share-btn'].disabled,false);
+  a.els['share-btn'].emit('click');
+  assert.equal(renders,1);
+  assert.equal(a.els['settings-fields'].disabled,true);
+  resolve({canvas:{width:10,height:10},missing:0});await tick();await tick();
+  assert.equal(a.els['settings-fields'].disabled,false);
+});
+test('export is exclusive, preserves identity, and enables download',async()=>{
   let resolve,renders=0;const a=app({render:()=>{renders++;return new Promise(r=>{resolve=r})},toBlob:async()=>new Blob(['PNG'],{type:'image/png'})});
   await generate(a);a.els['export-btn'].emit('click');a.els['export-btn'].emit('click');
   assert.equal(renders,1);assert.equal(a.els['settings-fields'].disabled,true);

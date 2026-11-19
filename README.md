@@ -18,7 +18,7 @@ O PNG é desenhado diretamente no canvas, sem carregar bibliotecas externas. Usa
 
 A exportação sempre usa a qualidade padrão: até dois milhões de pixels e 2400 pixels por lado. As dimensões exatas dependem do formato; a largura e a altura são exibidas antes do download.
 
-O botão de compartilhar permanece disponível na barra de exportação e fica ativo depois que o PNG é gerado. Navegadores sem compartilhamento de arquivos PNG mostram uma orientação para usar o download.
+O botão de compartilhar permanece disponível na barra de exportação assim que o chart está carregado. Ele gera o PNG diretamente para o compartilhamento nativo, sem exigir um download anterior. Navegadores sem compartilhamento de arquivos PNG mostram uma orientação para usar o download.
 
 ## Estrutura
 
